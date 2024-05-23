@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  db:
+    container_name: soundclone-db
+    image: postgres:latest
+    restart: on-failure
+    environment:
+      POSTGRES_USER: soundclone
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: soundclone
+    volumes:
+      - ./lib/tetrix4.db:/var/lib/postgresql/data
+    ports:
+      - "15432:5432"

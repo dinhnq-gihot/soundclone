@@ -4,7 +4,7 @@ use {
     std::fmt::Debug,
 };
 
-#[derive(Debug, Identifiable, AsChangeset, Selectable, PartialEq, Clone)]
+#[derive(Debug, Identifiable, AsChangeset, Selectable, Queryable, PartialEq, Clone, Default)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[diesel(primary_key(id))]

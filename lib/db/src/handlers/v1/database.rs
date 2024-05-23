@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use diesel_async::{
     pooled_connection::{
         bb8::{Pool, PooledConnection},

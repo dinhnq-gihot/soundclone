@@ -4,7 +4,7 @@ diesel::table! {
     albums (id) {
         id -> Int4,
         title -> Varchar,
-        artist_id -> Nullable<Int4>,
+        artist_id -> Int4,
         release_date -> Nullable<Date>,
         cover_art -> Nullable<Varchar>,
         created_at -> Timestamptz,

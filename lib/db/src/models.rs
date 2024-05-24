@@ -1,5 +1,5 @@
 use {
-    chrono::{DateTime, NaiveDate, Utc},
+    chrono::{DateTime, Local, NaiveDate},
     diesel::prelude::*,
     std::fmt::Debug,
 };
@@ -14,7 +14,7 @@ pub struct User {
     pub email: String,
     pub password: String,
     pub profile_picture: Option<String>,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime<Local>,
 }
 
 #[derive(Debug, Insertable)]
@@ -24,18 +24,22 @@ pub struct NewUser<'a> {
     pub username: &'a str,
     pub email: &'a str,
     pub password: &'a str,
+    pub created_at: &'a DateTime<Local>,
 }
 
-#[derive(Debug, Identifiable, AsChangeset, Selectable, PartialEq, Clone)]
+#[derive(
+    Debug, Queryable, Identifiable, AsChangeset, Selectable, PartialEq, Associations, Clone,
+)]
 #[diesel(table_name = crate::schema::albums)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
+#[diesel(belongs_to(User, foreign_key = artist_id))]
 pub struct Album {
     pub id: i32,
     pub title: String,
-    pub artist_id: Option<i32>,
+    pub artist_id: i32,
     pub release_date: Option<NaiveDate>,
     pub cover_art: Option<String>,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime<Local>,
 }
 
 #[derive(Debug, Insertable)]
@@ -43,9 +47,10 @@ pub struct Album {
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct NewAlbum<'a> {
     pub title: &'a str,
-    pub artist_id: Option<&'a i32>,
+    pub artist_id: &'a i32,
     pub release_date: Option<&'a NaiveDate>,
     pub cover_art: Option<&'a str>,
+    pub created_at: &'a DateTime<Local>,
 }
 
 #[derive(Debug, Identifiable, AsChangeset, Selectable, PartialEq, Clone)]
@@ -57,7 +62,7 @@ pub struct Playlist {
     pub user_id: Option<i32>,
     pub description: Option<String>,
     pub is_public: Option<bool>,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime<Local>,
 }
 
 #[derive(Debug, Insertable)]
@@ -82,7 +87,7 @@ pub struct Track {
     pub artist_id: Option<i32>,
     pub duration: Option<i32>,
     pub file_path: Option<String>,
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime<Local>,
 }
 
 #[derive(Debug, Insertable)]

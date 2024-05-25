@@ -75,11 +75,13 @@ pub struct NewPlayist<'a> {
     pub is_public: Option<&'a bool>,
 }
 
-#[derive(Debug, Identifiable, AsChangeset, Selectable, PartialEq, Clone)]
+#[derive(
+    Debug, Queryable, Identifiable, AsChangeset, Selectable, PartialEq, Associations, Clone,
+)]
 #[diesel(table_name = crate::schema::tracks)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-#[diesel(belongs_to(User))]
-#[diesel(belongs_to(Album))]
+#[diesel(belongs_to(User, foreign_key = artist_id))]
+#[diesel(belongs_to(Album, foreign_key = album_id))]
 pub struct Track {
     pub id: i32,
     pub title: String,
@@ -99,6 +101,7 @@ pub struct NewTrack<'a> {
     pub artist_id: Option<&'a i32>,
     pub duration: Option<&'a i32>,
     pub file_path: Option<&'a str>,
+    pub created_at: Option<&'a DateTime<Local>>,
 }
 
 #[derive(Debug, Identifiable, Selectable, Associations, Clone)]

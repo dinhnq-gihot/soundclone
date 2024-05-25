@@ -19,6 +19,17 @@ impl Albums {
         Self { db }
     }
 
+    pub async fn get_by_id(&self, id: i32) -> Result<Vec<Album>> {
+        let mut conn = self.db.get_connection().await;
+        let album_list = albums::table
+            .filter(albums::id.eq(id))
+            .select(Album::as_select())
+            .load(&mut conn)
+            .await?;
+
+        Ok(album_list)
+    }
+
     pub async fn get_by_title(&self, title: String) -> Result<Vec<Album>> {
         let mut conn = self.db.get_connection().await;
         let album_list = albums::table
@@ -30,14 +41,22 @@ impl Albums {
         Ok(album_list)
     }
 
-    pub async fn get_by_artist(&self, artist: User) -> Result<Vec<Album>> {
+    pub async fn get_by_artist(&self, artist: &User) -> Result<Vec<Album>> {
         let mut conn = self.db.get_connection().await;
-        let album_list = Album::belonging_to(&artist)
+        let album_list = Album::belonging_to(artist)
             .select(Album::as_select())
             .load(&mut conn)
             .await?;
 
         Ok(album_list)
+    }
+
+    pub async fn get_all(&self) -> Result<Vec<Album>> {
+        let mut conn = self.db.get_connection().await;
+        albums::table
+            .load(&mut conn)
+            .await
+            .map_err(|e|    anyhow!(e.to_string()))
     }
 
     pub async fn add(
@@ -121,9 +140,8 @@ impl Albums {
         let mut conn = self.db.get_connection().await;
         delete(albums::table)
             .filter(albums::title.eq(title))
-            .filter(users::id.eq(artist_id))
-            .returning(Album::as_returning())
-            .get_result(&mut conn)
+            .filter(albums::artist_id.eq(artist_id))
+            .execute(&mut conn)
             .await?;
 
         Ok(())

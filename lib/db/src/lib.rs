@@ -93,7 +93,10 @@ mod album_tests {
     use {
         super::*,
         anyhow::Result,
-        repositories::{albums::Albums as AlbumsHandler, database::Database},
+        diesel::Identifiable,
+        repositories::{
+            albums::Albums as AlbumsHandler, database::Database, users::Users as UsersHandler,
+        },
         std::sync::Arc,
     };
 
@@ -109,9 +112,14 @@ mod album_tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn test_insert_and_get_album() {
-        let albums = AlbumsHandler::new(setup_db().unwrap());
+        let db = setup_db().unwrap();
+        let albums = AlbumsHandler::new(Arc::clone(&db));
+        let users = UsersHandler::new(Arc::clone(&db));
+
+        let user = users.get("john.doe@example.com").await.unwrap();
+
         let album_by_title = albums.get_by_title("%ill%".into()).await.unwrap();
-        let album_by_artist = albums.get_by_artist("jane_smith".into()).await.unwrap();
+        let album_by_artist = albums.get_by_artist(&user).await.unwrap();
 
         println!("{album_by_title:?}");
         println!("{album_by_artist:?}");

@@ -19,15 +19,15 @@ impl Albums {
         Self { db }
     }
 
-    pub async fn get_by_id(&self, id: i32) -> Result<Vec<Album>> {
+    pub async fn get_by_id(&self, id: i32) -> Result<Album> {
         let mut conn = self.db.get_connection().await;
-        let album_list = albums::table
+        let album = albums::table
             .filter(albums::id.eq(id))
             .select(Album::as_select())
-            .load(&mut conn)
+            .first(&mut conn)
             .await?;
 
-        Ok(album_list)
+        Ok(album)
     }
 
     pub async fn get_by_title(&self, title: String) -> Result<Vec<Album>> {
@@ -56,7 +56,7 @@ impl Albums {
         albums::table
             .load(&mut conn)
             .await
-            .map_err(|e|    anyhow!(e.to_string()))
+            .map_err(|e| anyhow!(e.to_string()))
     }
 
     pub async fn add(

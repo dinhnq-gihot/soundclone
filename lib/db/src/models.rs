@@ -53,9 +53,12 @@ pub struct NewAlbum<'a> {
     pub created_at: &'a DateTime<Local>,
 }
 
-#[derive(Debug, Identifiable, AsChangeset, Selectable, PartialEq, Clone)]
+#[derive(
+    Debug, Queryable, Identifiable, AsChangeset, Selectable, PartialEq, Associations, Clone,
+)]
 #[diesel(table_name = crate::schema::playlists)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
+#[diesel(belongs_to(User, foreign_key = user_id))]
 pub struct Playlist {
     pub id: i32,
     pub name: String,

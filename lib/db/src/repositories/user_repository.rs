@@ -1,5 +1,9 @@
 use crate::{
-    models::{NewUser, User},
+    models::{
+        relationship_models::UserLikedTrack,
+        track_model::Track,
+        user_model::{NewUser, User},
+    },
     schema::users,
 };
 
@@ -21,7 +25,7 @@ impl Users {
 
     pub async fn add(&self, email: String, password: String, username: String) -> Result<User> {
         let mut conn = self.db.get_connection().await;
-        if let Some(_) = self.get(&email).await.ok() {
+        if let Some(_) = self.get_by_email(&email).await.ok() {
             return Err(anyhow!("User existed!"));
         }
         let new_user = NewUser {
@@ -39,12 +43,21 @@ impl Users {
             .map_err(|e| anyhow!(e.to_string()))
     }
 
-    pub async fn get(&self, email: &str) -> Result<User> {
+    pub async fn get_by_email(&self, email: &str) -> Result<User> {
         let mut conn = self.db.get_connection().await;
         users::table
             .filter(users::email.eq(email))
             .select(User::as_select())
             .first(&mut conn)
+            .await
+            .map_err(|e| anyhow!(e.to_string()))
+    }
+
+    pub async fn get_all_liked_track(&self, track: &Track) -> Result<Vec<User>> {
+        UserLikedTrack::belonging_to(track)
+            .inner_join(users::table)
+            .select(User::as_select())
+            .load(&mut self.db.get_connection().await)
             .await
             .map_err(|e| anyhow!(e.to_string()))
     }
@@ -57,7 +70,7 @@ impl Users {
         profile_picture: Option<String>,
     ) -> Result<User> {
         let mut conn = self.db.get_connection().await;
-        let mut existed_user = self.get(&email).await?;
+        let mut existed_user = self.get_by_email(&email).await?;
         if username.is_some() {
             existed_user.username = username.unwrap();
         }

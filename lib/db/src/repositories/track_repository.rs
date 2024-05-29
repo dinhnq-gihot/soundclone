@@ -2,7 +2,13 @@ use std::sync::Arc;
 
 use super::database::Database;
 use crate::{
-    models::{Album, NewTrack, Track, User},
+    models::{
+        album_model::Album,
+        playlist_model::Playlist,
+        relationship_models::{PlaylistTrack, UserLikedTrack},
+        track_model::{NewTrack, Track},
+        user_model::User,
+    },
     schema::{tracks, users},
 };
 use anyhow::{anyhow, Result};
@@ -30,6 +36,24 @@ impl Tracks {
 
     pub async fn get_all(&self) -> Result<Vec<Track>> {
         tracks::table
+            .load(&mut self.db.get_connection().await)
+            .await
+            .map_err(|e| anyhow!(e.to_string()))
+    }
+
+    pub async fn get_by_liked_user(&self, user: &User) -> Result<Vec<Track>> {
+        UserLikedTrack::belonging_to(user)
+            .inner_join(tracks::table)
+            .select(Track::as_select())
+            .load(&mut self.db.get_connection().await)
+            .await
+            .map_err(|e| anyhow!(e.to_string()))
+    }
+
+    pub async fn get_by_playlist(&self, playlist: &Playlist) -> Result<Vec<Track>> {
+        PlaylistTrack::belonging_to(playlist)
+            .inner_join(tracks::table)
+            .select(Track::as_select())
             .load(&mut self.db.get_connection().await)
             .await
             .map_err(|e| anyhow!(e.to_string()))

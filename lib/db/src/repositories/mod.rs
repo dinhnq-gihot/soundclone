@@ -1,5 +1,5 @@
 pub mod database;
-pub mod users;
-pub mod albums;
-pub mod tracks;
-pub mod playlists;
+pub mod user_repository;
+pub mod album_repository;
+pub mod track_repository;
+pub mod playlist_repository;

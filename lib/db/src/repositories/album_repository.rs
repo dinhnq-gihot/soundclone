@@ -2,8 +2,11 @@ use std::sync::Arc;
 
 use super::database::Database;
 use crate::{
-    models::{Album, NewAlbum, User},
-    schema::{albums, users},
+    models::{
+        album_model::{Album, NewAlbum},
+        user_model::User,
+    },
+    schema::albums,
 };
 use anyhow::{anyhow, Result};
 use chrono::{Local, NaiveDate};

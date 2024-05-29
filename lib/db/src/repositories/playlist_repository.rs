@@ -2,11 +2,16 @@ use std::sync::Arc;
 
 use super::database::Database;
 use crate::{
-    models::{NewPlayist, Playlist, User},
+    models::{
+        playlist_model::{NewPlayist, Playlist},
+        relationship_models::PlaylistTrack,
+        track_model::Track,
+        user_model::User,
+    },
     schema::{playlists, users},
 };
 use anyhow::{anyhow, Result};
-use diesel::{dsl::exists, insert_into, prelude::*, select};
+use diesel::{delete, dsl::exists, insert_into, prelude::*, select, update};
 use diesel_async::RunQueryDsl;
 
 pub struct Playlists {
@@ -33,6 +38,15 @@ impl Playlists {
         Playlist::belonging_to(user)
             .select(Playlist::as_select())
             .load(&mut conn)
+            .await
+            .map_err(|e| anyhow!(e.to_string()))
+    }
+
+    pub async fn get_by_track(&self, track: &Track) -> Result<Vec<Playlist>> {
+        PlaylistTrack::belonging_to(track)
+            .inner_join(playlists::table)
+            .select(Playlist::as_select())
+            .load(&mut self.db.get_connection().await)
             .await
             .map_err(|e| anyhow!(e.to_string()))
     }
@@ -83,15 +97,38 @@ impl Playlists {
         is_public: Option<bool>,
     ) -> Result<Playlist> {
         let mut conn = self.db.get_connection().await;
-        let existed_playlist = playlists::table
+        let mut existed_playlist: Playlist = playlists::table
             .filter(playlists::id.eq(playlist_id))
             .select(Playlist::as_select())
             .get_result(&mut conn)
             .await?;
-        
 
-        Ok(())
+        if let Some(_user_id) = user_id {
+            if select(exists(users::table.filter(users::id.eq(_user_id))))
+                .get_result(&mut conn)
+                .await?
+            {
+                existed_playlist.user_id = Some(_user_id)
+            }
+        }
+
+        existed_playlist.description = description;
+        existed_playlist.is_public = is_public;
+
+        update(playlists::table)
+            .set(existed_playlist)
+            .returning(Playlist::as_returning())
+            .get_result(&mut conn)
+            .await
+            .map_err(|e| anyhow!(e.to_string()))
     }
 
-    pub async fn delete(&self) {}
+    pub async fn delete(&self, playlist_id: i32) -> Result<Playlist> {
+        let mut conn = self.db.get_connection().await;
+        delete(playlists::table.filter(playlists::id.eq(playlist_id)))
+            .returning(Playlist::as_returning())
+            .get_result(&mut conn)
+            .await
+            .map_err(|e| anyhow!(e.to_string()))
+    }
 }

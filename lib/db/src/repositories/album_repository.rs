@@ -89,34 +89,29 @@ impl Albums {
 
     async fn update(
         &self,
-        title: String,
+        id: i32,
         artist_id: Option<i32>,
         new_title: Option<String>,
         release_date: Option<NaiveDate>,
         cover_art: Option<String>,
     ) -> Result<Album> {
         let mut conn = self.db.get_connection().await;
-        let album_list = self.get_by_title(title.clone()).await?;
-        let mut existed_album = if !album_list.is_empty() {
-            album_list[0].to_owned()
-        } else {
-            return Err(anyhow!("Album not existed"));
-        };
+        let mut updating_album = self.get_by_id(id).await?;
         if artist_id.is_some() {
-            existed_album.artist_id = artist_id.unwrap();
+            updating_album.artist_id = artist_id.unwrap();
         }
         if new_title.is_some() {
-            existed_album.title = new_title.unwrap();
+            updating_album.title = new_title.unwrap();
         }
         if release_date.is_some() {
-            existed_album.release_date = release_date;
+            updating_album.release_date = release_date;
         }
         if cover_art.is_some() {
-            existed_album.cover_art = cover_art;
+            updating_album.cover_art = cover_art;
         }
 
-        let ret = update(albums::table.filter(albums::title.eq(title)))
-            .set(existed_album)
+        let ret = update(albums::table.filter(albums::id.eq(id)))
+            .set(updating_album)
             .returning(Album::as_returning())
             .get_result(&mut conn)
             .await?;
@@ -124,26 +119,24 @@ impl Albums {
         Ok(ret)
     }
 
-    pub async fn update_artist(&self, title: String, new_artist_id: Option<i32>) -> Result<Album> {
-        self.update(title, new_artist_id, None, None, None).await
+    pub async fn update_artist(&self, id: i32, new_artist_id: Option<i32>) -> Result<Album> {
+        self.update(id, new_artist_id, None, None, None).await
     }
 
     pub async fn update_info(
         &self,
-        title: String,
+        id: i32,
         new_title: Option<String>,
         release_date: Option<NaiveDate>,
         cover_art: Option<String>,
     ) -> Result<Album> {
-        self.update(title, None, new_title, release_date, cover_art)
+        self.update(id, None, new_title, release_date, cover_art)
             .await
     }
 
-    pub async fn delete(&self, title: String, artist_id: i32) -> Result<()> {
+    pub async fn delete(&self, album_id: i32) -> Result<()> {
         let mut conn = self.db.get_connection().await;
-        delete(albums::table)
-            .filter(albums::title.eq(title))
-            .filter(albums::artist_id.eq(artist_id))
+        delete(albums::table.filter(albums::id.eq(album_id)))
             .execute(&mut conn)
             .await?;
 

@@ -53,6 +53,6 @@ impl Database {
     }
 
     pub async fn get_connection(&self) -> PooledConnection<AsyncPgConnection> {
-        self.pool.get().await.unwrap()
+        return self.pool.get().await.unwrap();
     }
 }

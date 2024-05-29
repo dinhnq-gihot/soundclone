@@ -5,6 +5,8 @@ members = ["bin/*", "lib/*"]
 
 [workspace.dependencies]
 soundclone-db = { path = "lib/db" }
+soundclone-service = { path = "lib/service" }
+
 diesel = { version = "2.1.5", features = [
     "postgres",
     "serde_json",

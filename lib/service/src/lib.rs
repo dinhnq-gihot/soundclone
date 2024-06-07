@@ -1,4 +1,4 @@
-mod handlers;
+pub mod handlers;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

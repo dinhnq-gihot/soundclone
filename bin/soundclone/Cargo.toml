@@ -6,3 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+soundclone-service.workspace = true
+soundclone-db.workspace = true
+
+tokio.workspace = true
+actix-web.workspace = true
+env_logger.workspace = true
+log.workspace = true
